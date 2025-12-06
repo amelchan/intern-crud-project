@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intern CRUD</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-10 font-sans">
+    <div class="max-w-md mx-auto bg-white rounded-xl shadow-lg overflow-hidden md:max-w-2xl p-8">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Intern CRUD</h1>
+            <span class="text-xs font-semibold inline-block py-1 px-2 rounded text-blue-600 bg-blue-200 uppercase last:mr-0 mr-1">
+                v1.0
+            </span>
+        </div>
+        
+        <div class="mb-6">
+            <div class="flex">
+                <input type="text" id="taskInput" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2" placeholder="Add a new task...">
+                <button onclick="addTask()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300 ease-in-out transform hover:scale-105">
+                    Add
+                </button>
+            </div>
+        </div>
+
+        <ul id="taskList" class="divide-y divide-gray-200">
+            <!-- Tasks will be loaded here -->
+        </ul>
+    </div>
+
+    <script>
+        async function fetchTasks() {
+            try {
+                const res = await fetch('/tasks');
+                const tasks = await res.json();
+                const list = document.getElementById('taskList');
+                list.innerHTML = tasks.map(t => `
+                    <li class="py-4 flex justify-between items-center group">
+                        <span class="text-gray-700 font-medium">${t.description}</span>
+                        <button onclick="deleteTask(${t.id})" class="text-red-400 hover:text-red-600 font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            Delete
+                        </button>
+                    </li>
+                `).join('');
+            } catch (e) {
+                console.error("Failed to fetch tasks", e);
+            }
+        }
+
+        async function addTask() {
+            const input = document.getElementById('taskInput');
+            const desc = input.value.trim();
+            if(!desc) return;
+            
+            try {
+                await fetch('/tasks', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ description: desc }) 
+                });
+                input.value = '';
+                fetchTasks();
+            } catch (e) {
+                console.error("Failed to add task", e);
+            }
+        }
+
+        async function deleteTask(id) {
+            try {
+                await fetch('/tasks/' + id, { method: 'DELETE' });
+                fetchTasks();
+            } catch (e) {
+                console.error("Failed to delete task", e);
+            }
+        }
+
+        // Load tasks on start
+        fetchTasks();
+    </script>
+</body>
+</html>
